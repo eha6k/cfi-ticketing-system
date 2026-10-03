@@ -1,0 +1,61 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+const roles = [
+  { name: 'Admin', value: 'ADMIN' },
+  { name: 'Team Lead', value: 'TEAM_LEAD' },
+  { name: 'Agent', value: 'AGENT' },
+];
+
+export default function HomePage() {
+  const router = useRouter();
+  const [selectedRole, setSelectedRole] = useState('ADMIN');
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem('cfi-role');
+    if (storedRole) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  const handleContinue = () => {
+    localStorage.setItem('cfi-role', selectedRole);
+    router.push('/dashboard');
+  };
+
+  return (
+    <main className="auth-shell">
+      <div className="auth-card">
+        <div className="brand-row">
+          <div className="brand-mark">CFI</div>
+          <div>
+            <div className="brand-label">Ticket Management System</div>
+            <div className="brand-subtitle">Modern support operations dashboard</div>
+          </div>
+        </div>
+
+        <h1>Sign in</h1>
+        <p className="muted">Choose a role to continue.</p>
+
+        <div className="role-grid">
+          {roles.map((role) => (
+            <button
+              key={role.value}
+              type="button"
+              className={`role-option ${selectedRole === role.value ? 'active' : ''}`}
+              onClick={() => setSelectedRole(role.value)}
+            >
+              {role.name}
+            </button>
+          ))}
+        </div>
+
+        <button type="button" className="primary-button full" onClick={handleContinue}>
+          Continue to dashboard
+        </button>
+      </div>
+    </main>
+  );
+}

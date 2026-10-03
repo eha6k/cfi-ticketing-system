@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEAM_LEAD
+  AGENT
+}
+
+enum TicketStatus {
+  OPEN
+  SOLVED
+  SECONDARY_REVIEW
+  CLOSED
+}
+
+enum RecordType {
+  NATIVE
+  MIGRATED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+
+  createdTickets Ticket[] @relation("CreatedTickets")
+  assignedTickets Ticket[] @relation("AssignedTickets")
+  comments       Comment[]
+  activities     TicketActivity[]
+}
+
+model Ticket {
+  id                     String       @id @default(cuid())
+  inSystemNumber         Int          @unique @default(autoincrement())
+  clientPlatformId       String
+  actualTicketReference  String
+  ticketType             String
+  regulatoryOrganization String
+  reason                 String?
+  relatedPositionNumbers String?
+  specialNotes           String?
+  status                 TicketStatus @default(OPEN)
+  createdById            String
+  createdBy              User         @relation("CreatedTickets", fields: [createdById], references: [id])
+  assigneeId             String?
+  assignee               User?        @relation("AssignedTickets", fields: [assigneeId], references: [id])
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  previousTicketCount    Int?
+  recordType             RecordType   @default(NATIVE)
+
+  comments Comment[]
+  history  TicketActivity[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model TicketActivity {
+  id            String   @id @default(cuid())
+  ticketId      String
+  ticket        Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  action        String
+  previousValue String?
+  newValue      String?
+  createdAt     DateTime @default(now())
+}
+
+model FormField {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  required    Boolean  @default(false)
+  order       Int
+  active      Boolean  @default(true)
+  placeholder String?
+  description String?
+  options     String?
+  createdAt   DateTime @default(now())
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
